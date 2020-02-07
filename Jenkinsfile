@@ -1,30 +1,28 @@
 pipeline {
-    agent {
-        docker {
-            image 'maven:3-alpine'
-            args '-v /root/.m2:/root/.m2'
-        }
-    }
+    agent any
+
     stages {
-        stage('Build') {
+        
+          stage("mvn build") {
             steps {
-                sh 'mvn -B -DskipTests clean package'
-            }
-        }
-        stage('Test') {
-            steps {
-                sh 'mvn test'
-            }
-            post {
-                always {
-                    junit 'target/surefire-reports/*.xml'
+                script {
+                    // If you are using Windows then you should use "bat" step
+                    // Since unit testing is out of the scope we skip them
+                    sh "mvn package -DskipTests=true"
                 }
             }
         }
-        stage('Deliver') {
+        stage('install') {
             steps {
-                sh './jenkins/scripts/deliver.sh'
+                sh label: '', script: 'mvn install'
             }
         }
+          stage('deploy') {
+            steps {
+                sh label: '', script: 'mvn deploy'
+            }
+        }  
+                          
+                 
     }
 }
